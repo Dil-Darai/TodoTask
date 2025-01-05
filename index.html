@@ -30,9 +30,10 @@
                         <button type="submit" class="btn btn-primary">Add Task</button>
                     </div>
                 </form>
-                <ul id="task-list" class="list-group">
+                <ul id="task-list" class="list-group mb-3">
                     <!-- Tasks will appear here -->
                 </ul>
+                <button id="delete-all" class="btn btn-danger w-100">Delete All Tasks</button>
             </div>
         </div>
     </div>
@@ -44,6 +45,25 @@
             const taskForm = document.getElementById('task-form');
             const taskInput = document.getElementById('task-input');
             const taskList = document.getElementById('task-list');
+            const deleteAllButton = document.getElementById('delete-all');
+
+            // Load tasks from localStorage
+            const loadTasks = () => {
+                const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+                tasks.forEach(task => addTask(task.text, task.completed));
+            };
+
+            // Save tasks to localStorage
+            const saveTasks = () => {
+                const tasks = [];
+                document.querySelectorAll('#task-list li').forEach(li => {
+                    tasks.push({
+                        text: li.querySelector('.task-text').textContent,
+                        completed: li.querySelector('.task-text').classList.contains('completed')
+                    });
+                });
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+            };
 
             // Add Task
             taskForm.addEventListener('submit', (e) => {
@@ -52,15 +72,16 @@
                 if (taskText) {
                     addTask(taskText);
                     taskInput.value = '';
+                    saveTasks();
                 }
             });
 
             // Add task to the list
-            function addTask(taskText) {
+            function addTask(taskText, isCompleted = false) {
                 const li = document.createElement('li');
                 li.className = 'list-group-item d-flex justify-content-between align-items-center';
                 li.innerHTML = `
-                    <span class="task-text">${taskText}</span>
+                    <span class="task-text ${isCompleted ? 'completed' : ''}">${taskText}</span>
                     <div>
                         <button class="btn btn-success btn-sm me-2 mark-complete">Complete</button>
                         <button class="btn btn-danger btn-sm delete-task">Delete</button>
@@ -72,13 +93,24 @@
                 // Mark as Complete
                 li.querySelector('.mark-complete').addEventListener('click', () => {
                     li.querySelector('.task-text').classList.toggle('completed');
+                    saveTasks();
                 });
 
                 // Delete Task
                 li.querySelector('.delete-task').addEventListener('click', () => {
                     li.remove();
+                    saveTasks();
                 });
             }
+
+            // Delete All Tasks
+            deleteAllButton.addEventListener('click', () => {
+                taskList.innerHTML = '';
+                saveTasks();
+            });
+
+            // Initialize the app
+            loadTasks();
         });
     </script>
 </body>
